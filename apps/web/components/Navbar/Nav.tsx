@@ -4,7 +4,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { Button } from "../ui/button.tsx";
+import { Button } from "../ui/button";
 
 const Navbar = () => {
   const { data: session, status } = useSession();
@@ -59,7 +59,7 @@ const Navbar = () => {
           ) : (
             <>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button className="bg-primary text-primary-backgroud hover:bg-primary/90"
+                <Button className="bg-primary text-sm font-extrabold hover:bg-primary/90"
                       onClick={()=> signIn()}
                 >
                   Get Started
