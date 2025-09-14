@@ -1,77 +1,77 @@
+
 "use client";
 
-import { Button } from "@repo/ui";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { Button } from "../ui/button.tsx";
 
 const Navbar = () => {
   const { data: session, status } = useSession();
 
   return (
-    <nav className="bg-white shadow-soft border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Left side - Logo */}
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">S</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900">
-                SpendlyAI
-              </span>
-            </Link>
-          </div>
+    <motion.nav
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border"
+    >
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        {/* Logo */}
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+        >
+          <Link href="/" className="flex items-center space-x-2">
+            <h1 className="text-xl font-bold">SpendlyAI</h1>
+          </Link>
+        </motion.div>
 
-          {/* Right side - Navigation buttons */}
-          <div className="flex items-center space-x-4">
-            {session && (
-              <Link href="/dashboard">
-                <Button variant="outline" size="sm">
-                  Dashboard
-                </Button>
-              </Link>
-            )}
-            
-            {status === "loading" ? (
-              <div className="w-20 h-8 bg-gray-200 rounded animate-pulse"></div>
-            ) : session ? (
-              <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-700">
-                  Welcome, {session.user?.name}
-                </span>
-                <Button 
-                  variant="secondary" 
+        {/* Navigation / Auth */}
+        <div className="hidden md:flex items-center space-x-6">
+          {status === "loading" ? (
+            <div className="w-20 h-8 bg-gray-200 rounded animate-pulse"></div>
+          ) : session ? (
+            <>
+              <motion.div
+                whileHover={{ y: -2 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              >
+                <Link href="/dashboard">
+                  <Button variant="outline" size="sm">
+                    Dashboard
+                  </Button>
+                </Link>
+              </motion.div>
+              <span className="text-sm text-muted-foreground">
+                Welcome, {session.user?.name}
+              </span>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="secondary"
                   size="sm"
                   onClick={() => signOut()}
                 >
                   Logout
                 </Button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Button 
-                  variant="primary" 
-                  size="sm"
-                  onClick={() => signIn()}
+              </motion.div>
+            </>
+          ) : (
+            <>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button className="bg-primary text-primary-backgroud hover:bg-primary/90"
+                      onClick={()=> signIn()}
                 >
-                  Login
+                  Get Started
                 </Button>
-                <Link href="/auth/signup">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                  >
-                    Sign Up
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
+              </motion.div>
+            </>
+          )}
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 };
 
 export default Navbar;
+

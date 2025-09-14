@@ -3,6 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "../components/providers";
 import Navbar from "../components/Navbar/Nav";
+import { Analytics } from "@vercel/analytics/next";
+import { Suspense } from "react";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,9 +34,12 @@ export default function RootLayout({
       >
         <Providers>
           <Navbar />
-          <main className="min-h-screen">
-            {children}
-          </main>
+          <Suspense fallback={null}>
+            <main className="">
+              {children}
+            </main>
+          </Suspense>
+          <Analytics/>
         </Providers>
       </body>
     </html>
