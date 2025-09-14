@@ -25,7 +25,7 @@ export function TrustSection() {
               </div>
               <Quote className="w-8 h-8 text-accent mb-4" />
               <p className="text-card-foreground font-medium mb-4">
-                "SpendlyAI caught an endless loop that would've cost me hundreds. Essential for bootstrapped projects."
+               {"SpendlyAI caught an endless loop that would've cost me hundreds. Essential for bootstrapped projects."}
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
@@ -50,7 +50,7 @@ export function TrustSection() {
               </div>
               <Quote className="w-8 h-8 text-accent mb-4" />
               <p className="text-card-foreground font-medium mb-4">
-                "Finally, I can show investors a clear AI spend report. Crucial for managing runway and building trust."
+               {` "Finally, I can show investors a clear AI spend report. Crucial for managing runway and building trust."`}
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
@@ -75,8 +75,8 @@ export function TrustSection() {
               </div>
               <Quote className="w-8 h-8 text-accent mb-4" />
               <p className="text-card-foreground font-medium mb-4">
-                "SpendlyAI makes client billing transparent and saves hours of manual tracking across multiple
-                projects."
+                {`"SpendlyAI makes client billing transparent and saves hours of manual tracking across multiple
+                projects."`}
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
