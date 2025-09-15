@@ -15,9 +15,17 @@ const Navbar = () => {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="fixed top-0 left-0 right-0 z-50 pt-4  backdrop-blur-md "
+      className="fixed top-0 pt-4 left-0 right-0 z-50 "
     >
-      <div className="container mx-auto px-4 py-8 h-16 flex items-center justify-between border border-gray-300 rounded-2xl border-4">
+      <div
+        className="container  mx-auto px-4 h-16 flex items-center justify-between backdrop-blur-lg bg-black/40 border-b border-white/10 rounded-xl shadow-lg"
+        style={{
+          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
+          WebkitBackdropFilter: "blur(12px)",
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
         {/* Logo */}
         <motion.div
           whileHover={{ scale: 1.05 }}

@@ -61,7 +61,7 @@ export function HeroSection() {
   };
 
   return (
-    <section ref={ref} className="relative min-h-screen flex items-center justify-center ">
+    <section ref={ref} className=" min-h-screen flex items-center justify-center ">
       <motion.div
         className="absolute inset-0 bg-gradient-to-br from-black via-gray-900/100 to-black z-10"
         style={{ y }}
