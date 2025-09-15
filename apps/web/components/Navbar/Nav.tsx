@@ -20,10 +20,10 @@ const Navbar = () => {
       <div
         className="container  mx-auto px-4 h-16 flex items-center justify-between backdrop-blur-lg bg-black/40 border-b border-white/10 rounded-xl shadow-lg"
         style={{
-          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
+          boxShadow: "0 0px 32px 0 rgba(139, 145, 236, 0.46)",
           WebkitBackdropFilter: "blur(12px)",
           backdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,255,255,0.1)",
+          border: "1px solid rgba(255, 255, 255, 0.14)",
         }}
       >
         {/* Logo */}

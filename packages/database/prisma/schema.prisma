@@ -13,19 +13,53 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts Post[]
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String?   // only if not using OAuth
+  phoneNumber   String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  apiKeys       APIKey[]
+  alerts        Alert[]
+  usages        Usage[]
 }
 
-model Post {
-  id        Int     @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean @default(false)
-  authorId  Int
-  author    User    @relation(fields: [authorId], references: [id])
+model APIKey {
+  id            String   @id @default(cuid())
+  key           String   // encrypted at rest
+  service       String   // e.g., "OpenAI", "Anthropic"
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  usages        Usage[]
+}
+
+model Usage {
+  id            String   @id @default(cuid())
+  apiService    String   // e.g., "OpenAI"
+  modelUsed     String
+  inputTokens   Int
+  outputTokens  Int
+  cost          Float
+  timestamp     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  apiKey        APIKey   @relation(fields: [apiKeyId], references: [id])
+  apiKeyId      String
+}
+
+model Alert {
+  id            String   @id @default(cuid())
+  name          String
+  threshold     Float    // max cost allowed
+  frequency     String   // daily/weekly/monthly
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
 }
