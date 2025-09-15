@@ -34,10 +34,10 @@ export function ProblemSolutionSection() {
   }
 
   return (
-    <section ref={ref} className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900/30">
+    <section ref={ref} className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 ">
       <div className="max-w-7xl mx-auto">
         <motion.div
-          className="text-center mb-16"
+          className="text-center mb-16 overflow-visible"
           initial={{ opacity: 0, y: 50 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
           transition={{ duration: 0.8, ease: "easeOut" }}

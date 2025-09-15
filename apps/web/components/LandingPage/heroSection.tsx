@@ -5,9 +5,13 @@ import { Button } from "../ui/button"
 import { Badge } from "../ui/badge"
 import { CheckCircle, Shield, Clock, Zap, Sparkles } from "lucide-react"
 import { useRef, useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 
 export function HeroSection() {
   const ref = useRef(null);
+  const { data: session } = useSession();
+  const router = useRouter();
 
   // Scroll animations
   const { scrollYProgress } = useScroll({
@@ -47,10 +51,19 @@ export function HeroSection() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
+  // Handle CTA button click
+  const handleStartAudit = () => {
+    if (session) {
+      router.push("/dashboard");
+    } else {
+      router.push("/auth/signin");
+    }
+  };
+
   return (
-    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section ref={ref} className="relative min-h-screen flex items-center justify-center ">
       <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-black via-gray-900/50 to-black"
+        className="absolute inset-0 bg-gradient-to-br from-black via-gray-900/100 to-black z-10"
         style={{ y }}
       />
 
@@ -76,7 +89,7 @@ export function HeroSection() {
 
       {/* Your content */}
       <motion.div
-        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20"
+        className="relative z-15 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20"
         style={{ opacity }}
       >
         <div className="text-center">
@@ -130,6 +143,7 @@ export function HeroSection() {
             >
               <Button
                 size="lg"
+                onClick={handleStartAudit}
                 className="bg-white hover:bg-gray-100 text-black text-lg px-8 py-4 h-auto font-semibold shadow-lg hover:shadow-xl transition-all duration-200 relative overflow-hidden group"
               >
                 <motion.div
