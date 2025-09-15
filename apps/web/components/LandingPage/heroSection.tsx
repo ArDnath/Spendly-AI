@@ -7,19 +7,20 @@ import { CheckCircle, Shield, Clock, Zap, Sparkles } from "lucide-react"
 import { useRef, useEffect, useState } from "react"
 
 export function HeroSection() {
-  const ref = useRef(null)
+  const ref = useRef(null);
+
+  // Scroll animations
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
-  })
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
-
-  // ⭐ Fix hydration issue: generate random positions client-side
+  // Floating randomized particles
   const [positions, setPositions] = useState<
     { left: string; top: string; duration: number; delay: number }[]
-  >([])
+  >([]);
 
   useEffect(() => {
     const newPositions = Array.from({ length: 20 }, () => ({
@@ -27,9 +28,24 @@ export function HeroSection() {
       top: `${Math.random() * 100}%`,
       duration: 3 + Math.random() * 2,
       delay: Math.random() * 2,
-    }))
-    setPositions(newPositions)
-  }, [])
+    }));
+    setPositions(newPositions);
+  }, []);
+
+  // Mouse tracking
+  const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({
+        x: (e.clientX / window.innerWidth) * 100,
+        y: (e.clientY / window.innerHeight) * 100,
+      });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
 
   return (
     <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -105,11 +121,12 @@ export function HeroSection() {
           >
             <motion.div
               whileHover={{
-                scale: 1.05,
-                boxShadow: "0 0 30px rgba(255, 255, 255, 0.3)",
+                scale: 1.08,
+                boxShadow: "0px 0px 30px rgba(255, 255, 255, 0.3)",
               }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              className="rounded-lg py-4"
             >
               <Button
                 size="lg"
