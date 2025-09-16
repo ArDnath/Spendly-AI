@@ -70,6 +70,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.62.0(react@19.1.0))
+      '@prisma/client':
+        specifier: ^6.16.1
+        version: 6.16.1(prisma@6.16.1(typescript@5.9.2))(typescript@5.9.2)
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@19.1.1(@types/react@19.1.0))(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -151,6 +154,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.8
         version: 1.2.8(@types/react-dom@19.1.1(@types/react@19.1.0))(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@repo/db':
+        specifier: workspace:^
+        version: link:../../packages/database
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -202,6 +208,9 @@ importers:
       nodemailer:
         specifier: ^6.9.0
         version: 6.10.1
+      prisma:
+        specifier: ^6.16.1
+        version: 6.16.1(typescript@5.9.2)
       react:
         specifier: 19.1.0
         version: 19.1.0

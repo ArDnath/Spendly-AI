@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server';
 import { authenticateRequest, createAuthResponse } from '../../../../lib/auth-middleware';
-import { createErrorResponse, createSuccessResponse, validateRequestBody, alertThresholdSchema } from '../../../../lib/validation';
+import { createErrorResponse, createSuccessResponse } from '../../../../lib/validation';
 import { prisma } from '../../../../lib/prisma';
+import { z } from 'zod';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,13 +14,17 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json();
-    const validation = validateRequestBody(alertThresholdSchema, body);
+    const alertSchema = z.object({
+      name: z.string().min(1, 'Name is required'),
+      threshold: z.number().positive('Threshold must be positive'),
+      thresholdType: z.enum(['cost', 'tokens', 'requests']).default('cost'),
+      period: z.enum(['daily', 'weekly', 'monthly']).default('monthly'),
+      notificationMethod: z.enum(['email', 'slack', 'webhook']).default('email'),
+      isActive: z.boolean().default(true),
+      apiKeyId: z.string().optional()
+    });
     
-    if (!validation.success) {
-      return createErrorResponse(400, validation.error);
-    }
-
-    const { threshold, type } = validation.data;
+    const validatedData = alertSchema.parse(body);
 
     // Find user first to get the actual user ID
     const user = await prisma.user.findUnique({
@@ -30,35 +35,38 @@ export async function POST(request: NextRequest) {
       return createErrorResponse(404, 'User not found');
     }
 
-    // Create or update an Alert record in the database
-    const alert = await prisma.alert.upsert({
-      where: {
-        userId_type: {
-          userId: user.id,
-          type: type
-        }
-      },
-      update: {
-        threshold: threshold,
-        updatedAt: new Date()
-      },
-      create: {
+    // Create an Alert record in the database
+    const alert = await prisma.alert.create({
+      data: {
         userId: user.id,
-        threshold: threshold,
-        type: type
+        name: validatedData.name,
+        threshold: validatedData.threshold,
+        thresholdType: validatedData.thresholdType,
+        period: validatedData.period,
+        notificationMethod: validatedData.notificationMethod,
+        isActive: validatedData.isActive,
+        apiKeyId: validatedData.apiKeyId
+      },
+      select: {
+        id: true,
+        name: true,
+        threshold: true,
+        thresholdType: true,
+        period: true,
+        notificationMethod: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true
       }
     });
 
-    return createSuccessResponse({
-      id: alert.id,
-      threshold: alert.threshold,
-      type: alert.type,
-      createdAt: alert.createdAt,
-      updatedAt: alert.updatedAt
-    }, 201);
+    return createSuccessResponse(alert);
 
   } catch (error) {
-    console.error('Error creating/updating alert threshold:', error);
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(400, 'Validation error');
+    }
+    console.error('Error creating alert:', error);
     return createErrorResponse(500, 'Internal server error');
   }
 }
