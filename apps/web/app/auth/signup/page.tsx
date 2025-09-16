@@ -1,7 +1,8 @@
 "use client";
 
 import { getProviders, signIn, getSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useAuthStore } from "../../../stores/auth-store";
 import { Button } from "@repo/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,7 +13,7 @@ interface Provider {
 }
 
 export default function SignUp() {
-  const [providers, setProviders] = useState<Record<string, Provider> | null>(null);
+  const { providers, setProviders } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {

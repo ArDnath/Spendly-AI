@@ -1,97 +1,49 @@
+
 "use client"
 
 import { motion, useScroll, useTransform } from "framer-motion"
-import { Button } from "../ui/button"
-import { Badge } from "../ui/badge"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Shield, Clock, Zap, Sparkles } from "lucide-react"
-import { useRef, useEffect, useState } from "react"
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRef } from "react"
 
 export function HeroSection() {
-  const ref = useRef(null);
-  const { data: session } = useSession();
-  const router = useRouter();
-
-  // Scroll animations
+  const ref = useRef(null)
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
-  });
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  })
 
-  // Floating randomized particles
-  const [positions, setPositions] = useState<
-    { left: string; top: string; duration: number; delay: number }[]
-  >([]);
-
-  useEffect(() => {
-    const newPositions = Array.from({ length: 20 }, () => ({
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      duration: 3 + Math.random() * 2,
-      delay: Math.random() * 2,
-    }));
-    setPositions(newPositions);
-  }, []);
-
-  // Mouse tracking
-  const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100,
-      });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
-  // Handle CTA button click
-  const handleStartAudit = () => {
-    if (session) {
-      router.push("/dashboard");
-    } else {
-      router.push("/auth/signin");
-    }
-  };
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
 
   return (
-    <section ref={ref} className=" min-h-screen flex items-center justify-center ">
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-black via-gray-900/100 to-black z-10"
-        style={{ y }}
-      />
+    <section ref={ref} className="min-h-screen flex items-center justify-center">
+      <motion.div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900/50 to-black" style={{ y }} />
 
-      {/* Random dots, now hydration-safe */}
       <div className="absolute inset-0">
-        {positions.map((pos, i) => (
+        {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-white/20 rounded-full"
-            style={{ left: pos.left, top: pos.top }}
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
             animate={{
               y: [0, -100, 0],
               opacity: [0, 1, 0],
             }}
             transition={{
-              duration: pos.duration,
+              duration: 3 + Math.random() * 2,
               repeat: Number.POSITIVE_INFINITY,
-              delay: pos.delay,
+              delay: Math.random() * 2,
             }}
           />
         ))}
       </div>
 
-      {/* Your content */}
-      <motion.div
-        className="relative z-15 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20"
-        style={{ opacity }}
-      >
+      <motion.div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20" style={{ opacity }}>
         <div className="text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -105,7 +57,6 @@ export function HeroSection() {
             </Badge>
           </motion.div>
 
-          {/* Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -115,7 +66,6 @@ export function HeroSection() {
             Stop AI Bill <span className="text-white">Surprises</span>
           </motion.h1>
 
-          {/* Subtext */}
           <motion.p
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -125,29 +75,27 @@ export function HeroSection() {
             Track AI costs, set alerts, stay in control
           </motion.p>
 
-          {/* CTA Button */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-            className="mb-8"
+            className="mb-8 "
           >
             <motion.div
               whileHover={{
-                scale: 1.08,
-                boxShadow: "0px 0px 30px rgba(255, 255, 255, 0.3)",
+                scale: 1.05,
+                boxShadow: "0 0 30px rgba(255, 255, 255, 0.3)",
               }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              className="rounded-lg py-4"
+              className ="rounded-xl py-4"
             >
               <Button
                 size="lg"
-                onClick={handleStartAudit}
-                className="bg-white hover:bg-gray-100 text-black text-lg px-8 py-4 h-auto font-semibold shadow-lg hover:shadow-xl transition-all duration-200 relative overflow-hidden group"
+                className="bg-white hover:bg-gray-100 text-black text-lg px-8 py-4 h-auto font-semibold shadow-lg hover:shadow-xl transition-all duration-200 relative overflow-hidden group "
               >
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent py-4"
                   initial={{ x: "-100%" }}
                   whileHover={{ x: "100%" }}
                   transition={{ duration: 0.6 }}
@@ -155,7 +103,9 @@ export function HeroSection() {
                 Start Free Audit
               </Button>
             </motion.div>
-          </motion.div>          <motion.div
+          </motion.div>
+
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.6 }}
@@ -260,3 +210,4 @@ export function HeroSection() {
     </section>
   )
 }
+

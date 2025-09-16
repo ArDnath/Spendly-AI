@@ -1,28 +1,21 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from './Button';
 import { Card } from './Card';
 import { Input } from './Input';
 import { Modal } from './Modal';
+import { useExampleStore } from '../stores/example-store';
 
 export const Example: React.FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [inputValue, setInputValue] = useState('');
-  const [inputError, setInputError] = useState('');
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-    if (inputError) setInputError('');
-  };
-
-  const handleSubmit = () => {
-    if (!inputValue.trim()) {
-      setInputError('This field is required');
-      return;
-    }
-    setIsModalOpen(true);
-  };
+  const { 
+    isModalOpen, 
+    inputValue, 
+    inputError, 
+    setModalOpen, 
+    handleInputChange, 
+    handleSubmit 
+  } = useExampleStore();
 
   return (
     <div className="max-w-4xl mx-auto p-8 space-y-8">
@@ -118,7 +111,7 @@ export const Example: React.FC = () => {
         <p className="text-gray-600 mb-4">
           Click the button below to open a modal dialog.
         </p>
-        <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+        <Button variant="primary" onClick={() => setModalOpen(true)}>
           Open Modal
         </Button>
       </Card>
@@ -126,7 +119,7 @@ export const Example: React.FC = () => {
       {/* Modal */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => setModalOpen(false)}
         title="Welcome to SpendlyAI"
         size="md"
       >
@@ -137,10 +130,10 @@ export const Example: React.FC = () => {
           </p>
           
           <div className="flex gap-3 pt-4">
-            <Button variant="primary" onClick={() => setIsModalOpen(false)}>
+            <Button variant="primary" onClick={() => setModalOpen(false)}>
               Get Started
             </Button>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+            <Button variant="outline" onClick={() => setModalOpen(false)}>
               Learn More
             </Button>
           </div>

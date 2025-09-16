@@ -3,21 +3,48 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Button } from "@repo/ui";
+import { useDashboardStore } from "../../stores/dashboard-store";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import { 
+  DollarSign, 
+  TrendingUp, 
+  AlertTriangle, 
+  Key, 
+  Plus, 
+  Eye, 
+  EyeOff, 
+  Copy, 
+  Trash2,
+  Settings,
+  BarChart3,
+  Zap
+} from "lucide-react";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { apiKeys, showKeys, toggleKeyVisibility } = useDashboardStore();
 
   useEffect(() => {
     if (status === "loading") return; // Still loading
     if (!session) router.push("/auth/signin"); // Not signed in
   }, [session, status, router]);
 
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full"
+        />
       </div>
     );
   }
@@ -27,137 +54,294 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 pt-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-black text-white pt-24 pb-8">
+      {/* Background Effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(10)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-white/10 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -100, 0],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: 4 + Math.random() * 2,
+              repeat: Number.POSITIVE_INFINITY,
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="bg-white shadow rounded-lg p-6 mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Welcome back, {session.user?.name || "User"}!
-              </h1>
-              <p className="text-gray-600 mt-2">
-                Manage your expenses and track your financial goals with SpendlyAI
-              </p>
-            </div>
-            <div className="flex items-center space-x-2">
-              {session.user?.image && (
-                <picture>
-                  <img
-                    src={session.user.image}
-                    alt="Profile"
-                    className="w-12 h-12 rounded-full"
-                  />
-                </picture>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Balance</p>
-                <p className="text-2xl font-semibold text-gray-900">$0.00</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">This Month</p>
-                <p className="text-2xl font-semibold text-gray-900">$0.00</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Categories</p>
-                <p className="text-2xl font-semibold text-gray-900">0</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Transactions */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Recent Transactions</h3>
-            </div>
-            <div className="p-6">
-              <div className="text-center py-12">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No transactions</h3>
-                <p className="mt-1 text-sm text-gray-500">Get started by adding your first expense.</p>
-                <div className="mt-6">
-                  <Button variant="primary">
-                    Add Transaction
-                  </Button>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-8"
+        >
+          <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-3xl font-bold text-white flex items-center gap-3">
+                    <Zap className="w-8 h-8" />
+                    Welcome back, {session.user?.name || "User"}!
+                  </CardTitle>
+                  <CardDescription className="text-gray-300 text-lg mt-2">
+                    Monitor your AI costs and optimize your spending with real-time insights
+                  </CardDescription>
+                </div>
+                <div className="flex items-center space-x-3">
+                  {session.user?.image && (
+                    <img
+                      src={session.user.image}
+                      alt="Profile"
+                      className="w-16 h-16 rounded-full border-2 border-white/20"
+                    />
+                  )}
                 </div>
               </div>
-            </div>
-          </div>
+            </CardHeader>
+          </Card>
+        </motion.div>
+
+        {/* Stats Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+        >
+          <Card className="bg-white/5 border-white/10 backdrop-blur-xl hover:bg-white/10 transition-all duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm font-medium">This Month</p>
+                  <p className="text-3xl font-bold text-white">$247.83</p>
+                  <p className="text-green-400 text-sm">↓ 23% saved</p>
+                </div>
+                <div className="p-3 bg-white/10 rounded-full">
+                  <DollarSign className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/5 border-white/10 backdrop-blur-xl hover:bg-white/10 transition-all duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm font-medium">Budget Left</p>
+                  <p className="text-3xl font-bold text-white">$752</p>
+                  <p className="text-gray-400 text-sm">of $1,000</p>
+                </div>
+                <div className="p-3 bg-white/10 rounded-full">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/5 border-white/10 backdrop-blur-xl hover:bg-white/10 transition-all duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm font-medium">Active Alerts</p>
+                  <p className="text-3xl font-bold text-white">2</p>
+                  <p className="text-orange-400 text-sm">Needs attention</p>
+                </div>
+                <div className="p-3 bg-white/10 rounded-full">
+                  <AlertTriangle className="w-6 h-6 text-orange-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* API Keys Management */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Key className="w-5 h-5" />
+                    API Keys
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Key
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {apiKeys.map((apiKey) => (
+                  <div
+                    key={apiKey.id}
+                    className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all duration-200"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <h4 className="text-white font-medium">{apiKey.name}</h4>
+                        <p className="text-gray-400 text-sm">{apiKey.provider}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleKeyVisibility(apiKey.id)}
+                          className="text-gray-400 hover:text-white"
+                        >
+                          {showKeys[apiKey.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(apiKey.key)}
+                          className="text-gray-400 hover:text-white"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <code className="text-gray-300 bg-black/30 px-2 py-1 rounded">
+                        {showKeys[apiKey.id] ? apiKey.key : "••••••••••••••••"}
+                      </code>
+                      <span className="text-gray-400">Last used: {apiKey.lastUsed}</span>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </motion.div>
 
           {/* Quick Actions */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
-                  <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Add Expense
-                </Button>
-                <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
-                  <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  View Reports
-                </Button>
-                <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
-                  <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                  Set Budget
-                </Button>
-                <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
-                  <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Settings
-                </Button>
-              </div>
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      variant="outline"
+                      className="h-20 w-full flex flex-col items-center justify-center bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/30"
+                    >
+                      <Plus className="w-6 h-6 mb-2" />
+                      Add Provider
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      variant="outline"
+                      className="h-20 w-full flex flex-col items-center justify-center bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/30"
+                    >
+                      <BarChart3 className="w-6 h-6 mb-2" />
+                      View Reports
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      variant="outline"
+                      className="h-20 w-full flex flex-col items-center justify-center bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/30"
+                    >
+                      <AlertTriangle className="w-6 h-6 mb-2" />
+                      Set Alerts
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      variant="outline"
+                      className="h-20 w-full flex flex-col items-center justify-center bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/30"
+                    >
+                      <Settings className="w-6 h-6 mb-2" />
+                      Settings
+                    </Button>
+                  </motion.div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
+
+        {/* Recent Activity */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-8"
+        >
+          <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="text-white">Recent Activity</CardTitle>
+              <CardDescription className="text-gray-400">
+                Latest AI API usage and cost alerts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                    <div>
+                      <p className="text-white font-medium">OpenAI API Call</p>
+                      <p className="text-gray-400 text-sm">GPT-4 completion - 2,340 tokens</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-white font-medium">$0.047</p>
+                    <p className="text-gray-400 text-sm">2 min ago</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-orange-400 rounded-full" />
+                    <div>
+                      <p className="text-white font-medium">Budget Alert</p>
+                      <p className="text-gray-400 text-sm">75% of monthly budget reached</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-orange-400 font-medium">Alert</p>
+                    <p className="text-gray-400 text-sm">1 hour ago</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );
