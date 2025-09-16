@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server';
 import { authenticateRequest, createAuthResponse } from '../../../lib/auth-middleware';
 import { createErrorResponse, createSuccessResponse } from '../../../lib/validation';
-import { prisma } from '../../../lib/prisma';
+import { prisma } from '@repo/db';
+import { encrypt } from '../../../lib/utils';
 import { z } from 'zod';
 
 export async function GET(request: NextRequest) {
@@ -28,6 +29,8 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         provider: true,
+        name: true,
+        description: true,
         status: true,
         createdAt: true,
         updatedAt: true,
@@ -43,6 +46,8 @@ export async function GET(request: NextRequest) {
       apiKeys: apiKeys.map((key: any) => ({
         id: key.id,
         provider: key.provider,
+        name: key.name,
+        description: key.description,
         status: key.status,
         createdAt: key.createdAt,
         updatedAt: key.updatedAt
@@ -80,12 +85,12 @@ export async function POST(request: NextRequest) {
       return createErrorResponse(404, 'User not found');
     }
 
-    // Create the API key (in production, encrypt the API key)
+    // Create the API key (encrypt before storing)
     const apiKey = await prisma.apiKey.create({
       data: {
         userId: user.id,
         provider: validatedData.provider,
-        encryptedKey: validatedData.apiKey, // In production, encrypt this
+        encryptedKey: encrypt(validatedData.apiKey),
         name: validatedData.name,
         description: validatedData.description,
         status: 'active'

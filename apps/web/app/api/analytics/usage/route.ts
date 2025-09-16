@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { authenticateRequest, createAuthResponse } from '../../../../lib/auth-middleware';
 import { createErrorResponse, createSuccessResponse } from '../../../../lib/validation';
-import { prisma } from '../../../../lib/prisma';
+import { prisma } from '@repo/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,11 +27,10 @@ export async function GET(request: NextRequest) {
     startDate.setDate(startDate.getDate() - periodDays);
 
     // Build where clause for filtering
+    // Filter usages via ApiKey relation (since Usage belongs to ApiKey)
     const whereClause: any = {
-      userId: user.id,
-      createdAt: {
-        gte: startDate
-      }
+      apiKey: { userId: user.id },
+      createdAt: { gte: startDate }
     };
 
     if (apiKeyId) {
@@ -88,11 +87,7 @@ export async function GET(request: NextRequest) {
     // Calculate totals
     const totals = await prisma.usage.aggregate({
       where: whereClause,
-      _sum: {
-        cost: true,
-        tokens: true,
-        requests: true
-      }
+      _sum: { cost: true, tokens: true, requests: true }
     });
 
     // Calculate trends (compare with previous period)
@@ -101,17 +96,11 @@ export async function GET(request: NextRequest) {
     
     const previousTotals = await prisma.usage.aggregate({
       where: {
-        ...whereClause,
-        createdAt: {
-          gte: previousPeriodStart,
-          lt: startDate
-        }
+        apiKey: { userId: user.id },
+        createdAt: { gte: previousPeriodStart, lt: startDate },
+        ...(apiKeyId ? { apiKeyId } : {})
       },
-      _sum: {
-        cost: true,
-        tokens: true,
-        requests: true
-      }
+      _sum: { cost: true, tokens: true, requests: true }
     });
 
     const currentCost = totals._sum.cost || 0;

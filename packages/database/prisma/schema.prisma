@@ -32,32 +32,43 @@ model ApiKey {
   encryptedKey String
   provider     String
   status       String    @default("active")
+  name         String?
+  description  String?
   usageRecords Usage[]
+  alerts       Alert[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
 
 model Usage {
-  id                   String   @id @default(cuid())
-  apiKeyId             String
-  apiKey               ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
-  date                 DateTime
-  totalTokens          Int
-  cost                 Float
-  mostExpensiveEndpoint String?
-  createdAt            DateTime @default(now())
+  id         String   @id @default(cuid())
+  apiKeyId   String
+  apiKey     ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  provider   String
+  endpoint   String
+  tokens     Int
+  requests   Int
+  cost       Float
+  createdAt  DateTime @default(now())
 }
 
 model Alert {
-  id                   String   @id @default(cuid())
-  userId               String
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  threshold            Float
-  type                 String
-  lastNotificationSentAt DateTime?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                     String   @id @default(cuid())
+  userId                 String
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiKeyId               String?
+  apiKey                 ApiKey?  @relation(fields: [apiKeyId], references: [id])
 
-  @@unique([userId, type], name: "userId_type")
+  name                   String
+  threshold              Int
+  thresholdType          String
+  period                 String
+  notificationMethod     String
+  isActive               Boolean  @default(true)
+
+  lastNotificationSentAt DateTime?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 }
 

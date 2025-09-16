@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { authenticateRequest, createAuthResponse } from '../../../../lib/auth-middleware';
 import { createErrorResponse, createSuccessResponse } from '../../../../lib/validation';
-import { prisma } from '../../../../lib/prisma';
+import { prisma } from '@repo/db';
 
 export async function GET(request: NextRequest) {
   try {

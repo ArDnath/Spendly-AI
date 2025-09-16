@@ -1,16 +1,17 @@
 import { NextRequest } from 'next/server';
 import { authenticateRequest, createAuthResponse } from '../../../../lib/auth-middleware';
 import { createErrorResponse, createSuccessResponse } from '../../../../lib/validation';
-import { prisma } from '../../../../lib/prisma';
+import { prisma } from '@repo/db';
 import { z } from 'zod';
 
 const updateAlertSchema = z.object({
   name: z.string().min(1, 'Name is required').optional(),
   threshold: z.number().positive('Threshold must be positive').optional(),
-  thresholdType: z.enum(['cost', 'tokens', 'requests']).optional(),
-  period: z.enum(['daily', 'weekly', 'monthly']).optional(),
-  notificationMethod: z.enum(['email', 'slack', 'webhook']).optional(),
-  isActive: z.boolean().optional()
+  thresholdType: z.string().optional(),
+  period: z.string().optional(),
+  notificationMethod: z.string().optional(),
+  isActive: z.boolean().optional(),
+  apiKeyId: z.string().optional()
 });
 
 export async function PUT(
@@ -56,6 +57,7 @@ export async function PUT(
       where: { id: alertId },
       data: {
         ...validatedData,
+        ...(validatedData.threshold !== undefined ? { threshold: Math.trunc(validatedData.threshold) } : {}),
         updatedAt: new Date()
       },
       select: {

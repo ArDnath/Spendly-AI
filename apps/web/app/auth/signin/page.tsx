@@ -2,7 +2,7 @@
 "use client";
 
 import { getProviders, signIn, getSession } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "../../../stores/auth-store";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -18,6 +18,7 @@ interface Provider {
 export default function SignIn() {
   const { providers, setProviders } = useAuthStore();
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     const setUpProviders = async () => {
@@ -26,6 +27,10 @@ export default function SignIn() {
     };
 
     setUpProviders();
+  }, []);
+
+  useEffect(() => {
+    setIsMounted(true);
   }, []);
 
   useEffect(() => {
@@ -42,27 +47,29 @@ export default function SignIn() {
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
       {/* Background Effects */}
-      <div className="absolute inset-0">
-        {[...Array(15)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white/20 rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -100, 0],
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Number.POSITIVE_INFINITY,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
-      </div>
+      {isMounted && (
+        <div className="absolute inset-0">
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white/20 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -100, 0],
+                opacity: [0, 1, 0],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Number.POSITIVE_INFINITY,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Back to Home Button */}
       <motion.div

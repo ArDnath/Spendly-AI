@@ -37,9 +37,11 @@ import {
 
 interface Alert {
   id: string;
-  type: 'email' | 'slack';
+  name: string;
   threshold: number;
-  thresholdType: 'cost' | 'tokens';
+  thresholdType: string;
+  period: string;
+  notificationMethod: string;
   isActive: boolean;
   apiKeyId?: string;
   apiKeyProvider?: string;
@@ -60,9 +62,11 @@ export function AlertsManager({
 }: AlertsManagerProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newAlert, setNewAlert] = useState({
-    type: 'email' as 'email' | 'slack',
+    name: '',
     threshold: 10,
-    thresholdType: 'cost' as 'cost' | 'tokens',
+    thresholdType: 'cost' as 'cost' | 'tokens' | 'requests',
+    period: 'monthly' as 'daily' | 'weekly' | 'monthly',
+    notificationMethod: 'email' as 'email' | 'slack' | 'webhook' | 'sms',
     isActive: true,
     apiKeyId: ''
   });
@@ -70,20 +74,23 @@ export function AlertsManager({
   const handleCreateAlert = () => {
     onCreateAlert({
       ...newAlert,
+      threshold: Math.trunc(newAlert.threshold),
       apiKeyId: newAlert.apiKeyId || undefined
     });
     setIsCreateDialogOpen(false);
     setNewAlert({
-      type: 'email',
+      name: '',
       threshold: 10,
       thresholdType: 'cost',
+      period: 'monthly',
+      notificationMethod: 'email',
       isActive: true,
       apiKeyId: ''
     });
   };
 
-  const getAlertIcon = (type: string) => {
-    switch (type) {
+  const getAlertIcon = (method: string) => {
+    switch (method) {
       case 'email':
         return <Mail className="w-4 h-4" />;
       case 'slack':
@@ -93,11 +100,13 @@ export function AlertsManager({
     }
   };
 
-  const getThresholdIcon = (type: string) => {
-    switch (type) {
+  const getThresholdIcon = (t: string) => {
+    switch (t) {
       case 'cost':
         return <DollarSign className="w-4 h-4" />;
       case 'tokens':
+        return <Activity className="w-4 h-4" />;
+      case 'requests':
         return <Activity className="w-4 h-4" />;
       default:
         return <AlertTriangle className="w-4 h-4" />;
@@ -143,11 +152,20 @@ export function AlertsManager({
               </DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="alert-type">Alert Type</Label>
+                  <Label htmlFor="alert-name">Name</Label>
+                  <Input
+                    id="alert-name"
+                    value={newAlert.name}
+                    onChange={(e) => setNewAlert({ ...newAlert, name: e.target.value })}
+                    placeholder="Monthly spend cap"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notification-method">Notification Method</Label>
                   <Select
-                    value={newAlert.type}
-                    onValueChange={(value: 'email' | 'slack') => 
-                      setNewAlert({ ...newAlert, type: value })
+                    value={newAlert.notificationMethod}
+                    onValueChange={(value: 'email' | 'slack' | 'webhook' | 'sms') => 
+                      setNewAlert({ ...newAlert, notificationMethod: value })
                     }
                   >
                     <SelectTrigger>
@@ -166,6 +184,8 @@ export function AlertsManager({
                           Slack
                         </div>
                       </SelectItem>
+                      <SelectItem value="webhook">Webhook</SelectItem>
+                      <SelectItem value="sms">SMS</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -174,7 +194,7 @@ export function AlertsManager({
                   <Label htmlFor="threshold-type">Threshold Type</Label>
                   <Select
                     value={newAlert.thresholdType}
-                    onValueChange={(value: 'cost' | 'tokens') => 
+                    onValueChange={(value: 'cost' | 'tokens' | 'requests') => 
                       setNewAlert({ ...newAlert, thresholdType: value })
                     }
                   >
@@ -194,6 +214,26 @@ export function AlertsManager({
                           Tokens
                         </div>
                       </SelectItem>
+                      <SelectItem value="requests">Requests</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="period">Period</Label>
+                  <Select
+                    value={newAlert.period}
+                    onValueChange={(value: 'daily' | 'weekly' | 'monthly') => 
+                      setNewAlert({ ...newAlert, period: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">Daily</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -261,9 +301,9 @@ export function AlertsManager({
               >
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
-                    {getAlertIcon(alert.type)}
+                    {getAlertIcon(alert.notificationMethod)}
                     <Badge variant={alert.isActive ? "default" : "secondary"}>
-                      {alert.type}
+                      {alert.notificationMethod}
                     </Badge>
                   </div>
                   
@@ -272,6 +312,7 @@ export function AlertsManager({
                     <span className="font-medium">
                       {formatThreshold(alert.threshold, alert.thresholdType)}
                     </span>
+                    <Badge variant="outline" className="text-xs capitalize">{alert.period}</Badge>
                   </div>
 
                   {alert.apiKeyProvider && (
@@ -286,6 +327,7 @@ export function AlertsManager({
                       {alert.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
+                  <div className="text-sm text-gray-600 truncate max-w-[180px]">{alert.name}</div>
                 </div>
 
                 <div className="flex items-center gap-2">

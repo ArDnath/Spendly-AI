@@ -5,10 +5,11 @@ import { motion, useScroll, useTransform } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Shield, Clock, Zap, Sparkles } from "lucide-react"
-import { useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 export function HeroSection() {
   const ref = useRef(null)
+  const [isMounted, setIsMounted] = useState(false)
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
@@ -17,31 +18,37 @@ export function HeroSection() {
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
 
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   return (
     <section ref={ref} className="min-h-screen flex items-center justify-center">
       <motion.div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900/50 to-black" style={{ y }} />
 
-      <div className="absolute inset-0">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white/20 rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -100, 0],
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Number.POSITIVE_INFINITY,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
-      </div>
+      {isMounted && (
+        <div className="absolute inset-0">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white/20 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -100, 0],
+                opacity: [0, 1, 0],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Number.POSITIVE_INFINITY,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       <motion.div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20" style={{ opacity }}>
         <div className="text-center">

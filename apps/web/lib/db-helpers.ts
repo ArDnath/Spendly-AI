@@ -1,4 +1,4 @@
-import { prisma } from './prisma';
+import { prisma } from '@repo/db';
 
 /**
  * Helper function to find or create a user by email
@@ -60,14 +60,15 @@ export async function getCurrentMonthUsage(userId: string) {
         apiKey: {
           userId: userId
         },
-        date: {
+        createdAt: {
           gte: currentMonthStart,
           lte: currentMonthEnd
         }
       },
       _sum: {
-        totalTokens: true,
-        cost: true
+        tokens: true,
+        cost: true,
+        requests: true
       },
       _count: {
         id: true
@@ -76,8 +77,8 @@ export async function getCurrentMonthUsage(userId: string) {
 
     return {
       totalCost: usage._sum.cost || 0,
-      totalTokens: usage._sum.totalTokens || 0,
-      totalRequests: usage._count.id || 0,
+      totalTokens: usage._sum.tokens || 0,
+      totalRequests: usage._sum.requests || 0,
       period: {
         start: currentMonthStart,
         end: currentMonthEnd
