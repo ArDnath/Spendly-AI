@@ -13,53 +13,51 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  password      String?   // only if not using OAuth
-  phoneNumber   String?   @unique
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  apiKeys       APIKey[]
-  alerts        Alert[]
-  usages        Usage[]
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String?
+  subscriptionPlan String    @default("Free")
+  apiKeys          ApiKey[]
+  alerts           Alert[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
-model APIKey {
-  id            String   @id @default(cuid())
-  key           String   // encrypted at rest
-  service       String   // e.g., "OpenAI", "Anthropic"
-  description   String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  user          User     @relation(fields: [userId], references: [id])
-  userId        String
-  usages        Usage[]
+model ApiKey {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  encryptedKey String
+  provider     String
+  status       String    @default("active")
+  usageRecords Usage[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model Usage {
-  id            String   @id @default(cuid())
-  apiService    String   // e.g., "OpenAI"
-  modelUsed     String
-  inputTokens   Int
-  outputTokens  Int
-  cost          Float
-  timestamp     DateTime @default(now())
-  user          User     @relation(fields: [userId], references: [id])
-  userId        String
-  apiKey        APIKey   @relation(fields: [apiKeyId], references: [id])
-  apiKeyId      String
+  id                   String   @id @default(cuid())
+  apiKeyId             String
+  apiKey               ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  date                 DateTime
+  totalTokens          Int
+  cost                 Float
+  mostExpensiveEndpoint String?
+  createdAt            DateTime @default(now())
 }
 
 model Alert {
-  id            String   @id @default(cuid())
-  name          String
-  threshold     Float    // max cost allowed
-  frequency     String   // daily/weekly/monthly
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  user          User     @relation(fields: [userId], references: [id])
-  userId        String
+  id                   String   @id @default(cuid())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  threshold            Float
+  type                 String
+  lastNotificationSentAt DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@unique([userId, type], name: "userId_type")
 }
+
