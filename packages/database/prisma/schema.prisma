@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -15,60 +9,48 @@ datasource db {
 }
 
 model User {
-  id               String    @id @default(cuid())
-  email            String    @unique
+  id               String   @id @default(cuid())
+  email            String   @unique
   name             String?
-  subscriptionPlan String    @default("Free")
+  subscriptionPlan String   @default("Free")
   apiKeys          ApiKey[]
   alerts           Alert[]
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model ApiKey {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   userId       String
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   encryptedKey String
   provider     String
-  status       String    @default("active")
-  name         String?
-  description  String?
+  status       String   @default("active")
   usageRecords Usage[]
-  alerts       Alert[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Usage {
-  id         String   @id @default(cuid())
-  apiKeyId   String
-  apiKey     ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
-
-  provider   String
-  endpoint   String
-  tokens     Int
-  requests   Int
-  cost       Float
-  createdAt  DateTime @default(now())
+  id                    String   @id @default(cuid())
+  apiKeyId              String
+  apiKey                ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  date                  DateTime
+  totalTokens           Int
+  cost                  Float
+  mostExpensiveEndpoint String?
+  createdAt             DateTime @default(now())
 }
 
 model Alert {
-  id                     String   @id @default(cuid())
+  id                     String    @id @default(cuid())
   userId                 String
-  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  apiKeyId               String?
-  apiKey                 ApiKey?  @relation(fields: [apiKeyId], references: [id])
-
-  name                   String
-  threshold              Int
-  thresholdType          String
-  period                 String
-  notificationMethod     String
-  isActive               Boolean  @default(true)
-
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  threshold              Float
+  type                   String
   lastNotificationSentAt DateTime?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-}
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
+  @@unique([userId, type], name: "userId_type")
+}
