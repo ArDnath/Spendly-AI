@@ -43,38 +43,43 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       _sum: {
         cost: true,
-        tokens: true,
-        requests: true
+        totalTokens: true
       },
       orderBy: {
         createdAt: 'asc'
       }
     });
 
-    // Get provider breakdown
-    const providerBreakdown = await prisma.usage.groupBy({
-      by: ['provider'],
-      where: whereClause,
-      _sum: {
-        cost: true,
-        tokens: true,
-        requests: true
+    // Get provider breakdown via ApiKey relation
+    const providerBreakdown = await prisma.apiKey.findMany({
+      where: {
+        userId: user.id,
+        usageRecords: {
+          some: {
+            createdAt: { gte: startDate }
+          }
+        }
       },
-      orderBy: {
-        _sum: {
-          cost: 'desc'
+      include: {
+        usageRecords: {
+          where: {
+            createdAt: { gte: startDate }
+          },
+          select: {
+            cost: true,
+            totalTokens: true
+          }
         }
       }
     });
 
     // Get endpoint breakdown
     const endpointBreakdown = await prisma.usage.groupBy({
-      by: ['endpoint'],
+      by: ['mostExpensiveEndpoint'],
       where: whereClause,
       _sum: {
         cost: true,
-        tokens: true,
-        requests: true
+        totalTokens: true
       },
       orderBy: {
         _sum: {
@@ -87,7 +92,7 @@ export async function GET(request: NextRequest) {
     // Calculate totals
     const totals = await prisma.usage.aggregate({
       where: whereClause,
-      _sum: { cost: true, tokens: true, requests: true }
+      _sum: { cost: true, totalTokens: true }
     });
 
     // Calculate trends (compare with previous period)
@@ -100,44 +105,73 @@ export async function GET(request: NextRequest) {
         createdAt: { gte: previousPeriodStart, lt: startDate },
         ...(apiKeyId ? { apiKeyId } : {})
       },
-      _sum: { cost: true, tokens: true, requests: true }
+      _sum: { cost: true, totalTokens: true }
     });
 
     const currentCost = totals._sum.cost || 0;
     const previousCost = previousTotals._sum.cost || 0;
     const costTrend = previousCost > 0 ? ((currentCost - previousCost) / previousCost) * 100 : 0;
 
-    const currentTokens = totals._sum.tokens || 0;
-    const previousTokens = previousTotals._sum.tokens || 0;
+    const currentTokens = totals._sum.totalTokens || 0;
+    const previousTokens = previousTotals._sum.totalTokens || 0;
     const tokenTrend = previousTokens > 0 ? ((currentTokens - previousTokens) / previousTokens) * 100 : 0;
 
-    const currentRequests = totals._sum.requests || 0;
-    const previousRequests = previousTotals._sum.requests || 0;
-    const requestTrend = previousRequests > 0 ? ((currentRequests - previousRequests) / previousRequests) * 100 : 0;
+    // Since we don't have a requests field, we'll use count of records
+    const currentRequestsCount = await prisma.usage.count({ where: whereClause });
+    const previousRequestsCount = await prisma.usage.count({
+      where: {
+        apiKey: { userId: user.id },
+        createdAt: { gte: previousPeriodStart, lt: startDate },
+        ...(apiKeyId ? { apiKeyId } : {})
+      }
+    });
+    const requestTrend = previousRequestsCount > 0 ? ((currentRequestsCount - previousRequestsCount) / previousRequestsCount) * 100 : 0;
 
     // Format daily usage data for charts
     const formattedDailyUsage = dailyUsage.map((day: any) => ({
       date: day.createdAt.toISOString().split('T')[0],
       cost: Number(day._sum.cost || 0),
-      tokens: Number(day._sum.tokens || 0),
-      requests: Number(day._sum.requests || 0)
+      tokens: Number(day._sum.totalTokens || 0),
+      requests: 1 // Each record represents one request
     }));
 
     // Format provider breakdown
-    const formattedProviderBreakdown = providerBreakdown.map((provider: any) => ({
-      provider: provider.provider,
-      cost: Number(provider._sum.cost || 0),
-      tokens: Number(provider._sum.tokens || 0),
-      requests: Number(provider._sum.requests || 0),
-      percentage: currentCost > 0 ? ((Number(provider._sum.cost || 0) / currentCost) * 100) : 0
+    const providerSummary = new Map();
+    providerBreakdown.forEach((apiKey: any) => {
+      const provider = apiKey.provider;
+      const totalCost = apiKey.usageRecords.reduce((sum: number, usage: any) => sum + (usage.cost || 0), 0);
+      const totalTokens = apiKey.usageRecords.reduce((sum: number, usage: any) => sum + (usage.totalTokens || 0), 0);
+      const requests = apiKey.usageRecords.length;
+      
+      if (providerSummary.has(provider)) {
+        const existing = providerSummary.get(provider);
+        providerSummary.set(provider, {
+          provider,
+          cost: existing.cost + totalCost,
+          tokens: existing.tokens + totalTokens,
+          requests: existing.requests + requests
+        });
+      } else {
+        providerSummary.set(provider, {
+          provider,
+          cost: totalCost,
+          tokens: totalTokens,
+          requests
+        });
+      }
+    });
+    
+    const formattedProviderBreakdown = Array.from(providerSummary.values()).map((provider: any) => ({
+      ...provider,
+      percentage: currentCost > 0 ? ((provider.cost / currentCost) * 100) : 0
     }));
 
     // Format endpoint breakdown
     const formattedEndpointBreakdown = endpointBreakdown.map((endpoint: any) => ({
-      endpoint: endpoint.endpoint,
+      endpoint: endpoint.mostExpensiveEndpoint,
       cost: Number(endpoint._sum.cost || 0),
-      tokens: Number(endpoint._sum.tokens || 0),
-      requests: Number(endpoint._sum.requests || 0)
+      tokens: Number(endpoint._sum.totalTokens || 0),
+      requests: 1 // Each record represents one request
     }));
 
     const analyticsData = {
@@ -145,8 +179,8 @@ export async function GET(request: NextRequest) {
       totals: {
         cost: currentCost,
         tokens: currentTokens,
-        requests: currentRequests,
-        averageCostPerRequest: currentRequests > 0 ? currentCost / currentRequests : 0
+        requests: currentRequestsCount,
+        averageCostPerRequest: currentRequestsCount > 0 ? currentCost / currentRequestsCount : 0
       },
       trends: {
         costTrend: Math.round(costTrend * 100) / 100,

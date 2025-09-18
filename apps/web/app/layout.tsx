@@ -5,6 +5,7 @@ import { Providers } from "../components/providers";
 import Navbar from "../components/Navbar/Nav";
 import { Analytics } from "@vercel/analytics/next";
 import { Suspense } from "react";
+import { initializeCronJobs } from "../lib/cron-scheduler";
 
 
 const geistSans = Geist({
@@ -27,6 +28,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Initialize CRON jobs on server startup
+  if (typeof window === 'undefined') {
+    initializeCronJobs();
+  }
+
   return (
     <html lang="en">
       <body

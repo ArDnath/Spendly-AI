@@ -13,6 +13,7 @@ model User {
   email            String   @unique
   name             String?
   subscriptionPlan String   @default("Free")
+  subscriptionEnd  DateTime @default(now())
   apiKeys          ApiKey[]
   alerts           Alert[]
   createdAt        DateTime @default(now())
@@ -25,32 +26,45 @@ model ApiKey {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   encryptedKey String
   provider     String
+  name         String
+  description  String?
   status       String   @default("active")
   usageRecords Usage[]
+  alerts       Alert[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
 
 model Usage {
-  id                    String   @id @default(cuid())
-  apiKeyId              String
-  apiKey                ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
-  date                  DateTime
-  totalTokens           Int
-  cost                  Float
-  mostExpensiveEndpoint String?
-  createdAt             DateTime @default(now())
+  id                     String   @id @default(cuid())
+  apiKeyId               String
+  apiKey                 ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  provider               String
+  endpoint               String
+  modelUsed              String?
+  inputTokens            Int      @default(0)
+  outputTokens           Int      @default(0)
+  totalTokens            Int      @default(0)
+  requests               Int      @default(1)
+  cost                   Float
+  mostExpensiveEndpoint  String?
+  date                   DateTime @default(now())
+  createdAt              DateTime @default(now())
 }
 
 model Alert {
   id                     String    @id @default(cuid())
   userId                 String
   user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  threshold              Float
-  type                   String
+  name                   String
+  threshold              Int
+  thresholdType          String    @default("cost") // cost, tokens, requests
+  period                 String    @default("monthly") // daily, weekly, monthly
+  notificationMethod     String    @default("email") // email, slack, webhook
+  isActive               Boolean   @default(true)
+  apiKeyId               String?
+  apiKey                 ApiKey?   @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
   lastNotificationSentAt DateTime?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
-
-  @@unique([userId, type], name: "userId_type")
 }

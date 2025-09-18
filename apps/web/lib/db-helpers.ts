@@ -52,7 +52,7 @@ export async function verifyApiKeyOwnership(apiKeyId: string, userId: string) {
 export async function getCurrentMonthUsage(userId: string) {
   const now = new Date();
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 11);
 
   try {
     const usage = await prisma.usage.aggregate({
