@@ -293,8 +293,8 @@ export async function checkAndSendAlerts(): Promise<void> {
             console.log(`Alert triggered for user ${alert.user.email}: ${alert.name}`);
             console.log(`Current ${alert.thresholdType}: ${currentValue}, Threshold: ${alert.threshold}`);
 
-            // Send notification using the notification service
-            const { alertNotificationService } = await import('./alert-notification-service');
+            // Send notification using the enhanced notification service
+            const { alertNotificationService } = await import('./enhanced-alert-service');
             
             const notification = {
               userId: alert.userId,
@@ -307,29 +307,45 @@ export async function checkAndSendAlerts(): Promise<void> {
               apiKeyName: alert.apiKey?.name,
             };
 
-            // Extract webhook URL from notification method if it's a webhook/slack
-            let webhookUrl: string | undefined;
-            if (alert.notificationMethod.startsWith('webhook:')) {
-              webhookUrl = alert.notificationMethod.split('webhook:')[1];
-            } else if (alert.notificationMethod.startsWith('slack:')) {
-              webhookUrl = alert.notificationMethod.split('slack:')[1];
-            }
+            // Parse notification methods (can be multiple, comma-separated)
+            const methods = alert.notificationMethod.split(',').map(m => m.trim());
+            const webhookUrls: Record<string, string> = {};
+            const cleanMethods: string[] = [];
 
-            const notificationSent = await alertNotificationService.sendNotification(
+            methods.forEach(method => {
+              if (method.includes(':')) {
+                const [methodName, url] = method.split(':', 2);
+                cleanMethods.push(methodName);
+                webhookUrls[methodName] = url;
+              } else {
+                cleanMethods.push(method);
+              }
+            });
+
+            // Check if user's subscription supports priority alerts
+            const user = await prisma.user.findUnique({
+              where: { id: alert.userId },
+              select: { subscriptionPlan: true },
+            });
+            
+            const isPriority = ['Team', 'Advanced'].includes(user?.subscriptionPlan || 'Free');
+
+            const notificationResult = await alertNotificationService.sendMultiChannelNotification(
               notification,
-              alert.notificationMethod.split(':')[0], // Extract method (email, slack, webhook)
-              webhookUrl
+              cleanMethods,
+              webhookUrls,
+              isPriority
             );
 
-            if (notificationSent) {
+            if (notificationResult.success) {
               // Update last notification sent time
               await prisma.alert.update({
                 where: { id: alert.id },
                 data: { lastNotificationSentAt: now },
               });
-              console.log(`Notification sent successfully for alert: ${alert.name}`);
+              console.log(`Notification sent successfully for alert: ${alert.name}`, notificationResult.results);
             } else {
-              console.error(`Failed to send notification for alert: ${alert.name}`);
+              console.error(`Failed to send notification for alert: ${alert.name}`, notificationResult.results);
             }
           }
         }

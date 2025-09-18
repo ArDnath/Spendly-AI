@@ -9,34 +9,48 @@ datasource db {
 }
 
 model User {
-  id               String   @id @default(cuid())
-  email            String   @unique
-  name             String?
-  subscriptionPlan String   @default("Free")
-  subscriptionEnd  DateTime @default(now())
-  apiKeys          ApiKey[]
-  alerts           Alert[]
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                     String               @id @default(cuid())
+  name                   String?
+  email                  String               @unique
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  subscriptionPlan       String               @default("Free") // Free, Pro, Team, Advanced
+  subscriptionEnd        DateTime             @default(now())
+  stripeCustomerId       String?
+  stripeSubscriptionId   String?
+  apiKeys                ApiKey[]
+  usage                  Usage[]
+  alerts                 Alert[]
+  projects               Project[]
+  budgets                Budget[]
+  auditLogs              AuditLog[]
+  organizations          Organization[]
+  organizationMemberships OrganizationMember[]
 }
 
 model ApiKey {
-  id           String   @id @default(cuid())
+  id           String        @id @default(cuid())
   userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId    String?
+  project      Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
   encryptedKey String
-  provider     String
+  provider     String        @default("openai") // Focus on OpenAI only
   name         String
   description  String?
-  status       String   @default("active")
+  status       String        @default("active")
   usageRecords Usage[]
   alerts       Alert[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  budgets      Budget[]
+  proxyLogs    APIProxyLog[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model Usage {
   id                     String   @id @default(cuid())
+  userId                 String
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   apiKeyId               String
   apiKey                 ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
   provider               String
@@ -60,11 +74,136 @@ model Alert {
   threshold              Int
   thresholdType          String    @default("cost") // cost, tokens, requests
   period                 String    @default("monthly") // daily, weekly, monthly
-  notificationMethod     String    @default("email") // email, slack, webhook
+  notificationMethod     String    @default("email") // email, slack, webhook, block
   isActive               Boolean   @default(true)
   apiKeyId               String?
   apiKey                 ApiKey?   @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
   lastNotificationSentAt DateTime?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
+}
+
+model Organization {
+  id          String               @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  owner       User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  projects    Project[]
+  budgets     Budget[]
+  members     OrganizationMember[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           String       @default("MEMBER") // OWNER, ADMIN, MEMBER
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([userId, organizationId])
+}
+
+model Project {
+  id             String    @id @default(cuid())
+  name           String
+  description    String?
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  apiKeys        ApiKey[]
+  budgets        Budget[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Budget {
+  id             String        @id @default(cuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  amount         Float
+  period         String        @default("monthly") // daily, weekly, monthly
+  type           String        @default("soft") // soft, hard
+  hardLimit      Boolean       @default(false)
+  apiKeyId       String?
+  apiKey         ApiKey?       @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  projectId      String?
+  project        Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model ProviderRate {
+  id           String   @id @default(cuid())
+  provider     String   @default("openai")
+  model        String   // gpt-4, gpt-4o, gpt-3.5-turbo, etc.
+  inputPer1M   Float    // Cost per 1M input tokens
+  outputPer1M  Float    // Cost per 1M output tokens
+  effectiveAt  DateTime @default(now())
+  createdAt    DateTime @default(now())
+  
+  @@unique([provider, model, effectiveAt])
+}
+
+model APIProxyLog {
+  id            String   @id @default(cuid())
+  apiKeyId      String
+  apiKey        ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  endpoint      String   @default("/chat/completions")
+  model         String
+  inputTokens   Int
+  outputTokens  Int
+  totalTokens   Int
+  computedCost  Float
+  requestId     String?  // OpenAI request ID
+  responseTime  Int?     // Response time in ms
+  success       Boolean  @default(true)
+  errorMessage  String?
+  createdAt     DateTime @default(now())
+}
+
+model BillingRecord {
+  id              String   @id @default(cuid())
+  userId          String
+  date            DateTime
+  totalCost       Float
+  stripeInvoiceId String?
+  reconciled      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([userId, date])
+}
+
+model NotificationChannel {
+  id               String   @id @default(cuid())
+  userId           String
+  type             String   // email, slack, discord, teams, webhook
+  endpoint         String?  // webhook URL, slack webhook, etc.
+  isActive         Boolean  @default(true)
+  throttleSettings Json?    // JSON object with throttling rules
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String   // key_added, key_removed, budget_created, etc.
+  resource  String?  // Resource ID that was affected
+  details   Json?    // Additional details about the action
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
 }

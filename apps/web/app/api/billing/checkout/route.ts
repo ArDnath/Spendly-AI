@@ -1,68 +1,88 @@
-import { NextRequest } from 'next/server';
-import { authenticateRequest, createAuthResponse } from '../../../../lib/auth-middleware';
-import { createErrorResponse, createSuccessResponse, validateRequestBody, billingCheckoutSchema } from '../../../../lib/validation';
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../auth/[...nextauth]/route';
 import { prisma } from '@repo/db';
+import { z } from 'zod';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-const PLAN_PRICES = {
-  Pro: {
-    priceId: process.env.STRIPE_PRO_PRICE_ID!,
-    amount: 1500, // $15.00 in cents
-  },
-  Team: {
-    priceId: process.env.STRIPE_TEAM_PRICE_ID!,
-    amount: 4900, // $49.00 in cents
-  }
-};
+const checkoutSchema = z.object({
+  plan: z.enum(['Pro', 'Team', 'Advanced']),
+});
 
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate the request
-    const auth = await authenticateRequest(request);
-    if (!auth) {
-      return createAuthResponse(401, 'Unauthorized');
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Parse and validate request body
-    const body = await request.json();
-    const validation = validateRequestBody(billingCheckoutSchema, body);
-    
-    if (!validation.success) {
-      return createErrorResponse(400, validation.error);
-    }
-
-    const { plan } = validation.data;
-
-    // Find user first to get the actual user ID
     const user = await prisma.user.findUnique({
-      where: { email: auth.userEmail }
+      where: { email: session.user.email },
     });
 
     if (!user) {
-      return createErrorResponse(404, 'User not found');
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get the plan configuration
-    const planConfig = PLAN_PRICES[plan];
-    if (!planConfig) {
-      return createErrorResponse(400, 'Invalid plan selected');
+    const body = await request.json();
+    const { plan } = checkoutSchema.parse(body);
+
+    // Get price ID based on plan
+    let priceId: string | undefined;
+    let amount: number;
+
+    switch (plan) {
+      case 'Pro':
+        priceId = process.env.STRIPE_PRO_PRICE_ID;
+        amount = 900; // $9.00
+        break;
+      case 'Team':
+        priceId = process.env.STRIPE_TEAM_PRICE_ID;
+        amount = 2900; // $29.00
+        break;
+      case 'Advanced':
+        priceId = process.env.STRIPE_ADVANCED_PRICE_ID;
+        amount = 9900; // $99.00
+        break;
     }
 
-    // Create a Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      customer_email: user.email,
+    if (!priceId) {
+      return NextResponse.json({ error: 'Price ID not configured' }, { status: 500 });
+    }
+
+    // Create or retrieve Stripe customer
+    let customerId = user.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.name || undefined,
+        metadata: {
+          userId: user.id,
+        },
+      });
+      customerId = customer.id;
+      
+      // Update user with customer ID
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { stripeCustomerId: customerId },
+      });
+    }
+
+    // Create Stripe checkout session
+    const checkoutSession = await stripe.checkout.sessions.create({
+      customer: customerId,
+      client_reference_id: user.id,
       payment_method_types: ['card'],
+      mode: 'subscription',
       line_items: [
         {
-          price: planConfig.priceId,
+          price: priceId,
           quantity: 1,
         },
       ],
-      mode: 'subscription',
       success_url: `${process.env.NEXTAUTH_URL}/dashboard?success=true&plan=${plan}`,
       cancel_url: `${process.env.NEXTAUTH_URL}/dashboard?canceled=true`,
       metadata: {
@@ -77,15 +97,18 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return createSuccessResponse({
-      checkoutUrl: session.url,
-      sessionId: session.id,
+    return NextResponse.json({
+      checkoutUrl: checkoutSession.url,
+      sessionId: checkoutSession.id,
       plan: plan,
-      amount: planConfig.amount
+      amount: amount,
     });
 
   } catch (error) {
-    console.error('Error creating checkout session:', error);
-    return createErrorResponse(500, 'Internal server error');
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
+    }
+    console.error('Checkout error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

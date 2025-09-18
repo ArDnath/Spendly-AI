@@ -64,7 +64,7 @@ spendlyAI/
 - **Manual Sync**: API endpoint for on-demand synchronization
 - **Rate Limiting**: Respects API rate limits with delays between requests
 
-### 4. Dashboard & Analytics
+### 5. Dashboard & Analytics
 - **Real-time Updates**: Auto-refresh every 30 seconds (toggleable)
 - **Key Metrics**:
   - Total monthly spend

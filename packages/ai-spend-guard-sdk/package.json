@@ -1,0 +1,36 @@
+{
+  "name": "@ai-spend-guard/sdk",
+  "version": "1.0.0",
+  "description": "Official SDK for AI Spend Guard - Track and control your OpenAI API usage",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "openai",
+    "api",
+    "usage",
+    "tracking",
+    "cost",
+    "monitoring",
+    "budget",
+    "alerts"
+  ],
+  "author": "AI Spend Guard",
+  "license": "MIT",
+  "dependencies": {
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/ai-spend-guard"
+  },
+  "homepage": "https://aispendguard.com"
+}
