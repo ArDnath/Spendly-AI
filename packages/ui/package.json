@@ -8,11 +8,25 @@
     "./button": "./src/components/Button.tsx",
     "./card": "./src/components/Card.tsx",
     "./input": "./src/components/Input.tsx",
-    "./modal": "./src/components/Modal.tsx"
+    "./modal": "./src/components/Modal.tsx",
+    "./components/ui/card": "./src/components/ui/card.tsx",
+    "./components/ui/button": "./src/components/ui/button.tsx",
+    "./components/ui/input": "./src/components/ui/input.tsx",
+    "./components/ui/label": "./src/components/ui/label.tsx",
+    "./components/ui/switch": "./src/components/ui/switch.tsx",
+    "./components/ui/select": "./src/components/ui/select.tsx",
+    "./components/ui/dialog": "./src/components/ui/dialog.tsx",
+    "./components/ui/tabs": "./src/components/ui/tabs.tsx",
+    "./components/ui/badge": "./src/components/ui/badge.tsx",
+    "./components/ui/progress": "./src/components/ui/progress.tsx",
+    "./components/ui/use-toast": "./src/components/ui/use-toast.tsx",
+    "./components/ui/table": "./src/components/ui/table.tsx"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "tailwind-merge": "^3.3.1",
     "zustand": "^5.0.8"
   },
   "peerDependencies": {

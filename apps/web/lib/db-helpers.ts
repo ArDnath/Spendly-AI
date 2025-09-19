@@ -66,7 +66,7 @@ export async function getCurrentMonthUsage(userId: string) {
         }
       },
       _sum: {
-        tokens: true,
+        totalTokens: true,
         cost: true,
         requests: true
       },
@@ -76,9 +76,9 @@ export async function getCurrentMonthUsage(userId: string) {
     });
 
     return {
-      totalCost: usage._sum.cost || 0,
-      totalTokens: usage._sum.tokens || 0,
-      totalRequests: usage._sum.requests || 0,
+      totalCost: usage._sum?.cost || 0,
+      totalTokens: usage._sum?.totalTokens || 0,
+      totalRequests: usage._sum?.requests || 0,
       period: {
         start: currentMonthStart,
         end: currentMonthEnd

@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { ModernDashboard } from "../../components/Dashboard/ModernDashboard";
+import { DashboardMain } from "../../components/dashboard/dashboard-main";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
@@ -29,5 +29,5 @@ export default function Dashboard() {
     return null; // Will redirect
   }
 
-  return <ModernDashboard />;
+  return <div className="pt-24"><DashboardMain /></div>;
 }

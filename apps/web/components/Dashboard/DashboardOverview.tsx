@@ -45,7 +45,7 @@ export function DashboardOverview({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       {/* Alert Banner */}
       {isOverBudget && (
         <motion.div

@@ -30,37 +30,16 @@ const PROVIDERS = [
     id: 'openai', 
     name: 'OpenAI', 
     icon: '🤖',
-    description: 'GPT-4, GPT-3.5, DALL-E, Whisper',
+    description: 'GPT-4, GPT-3.5, DALL-E, Whisper, Embeddings',
     keyFormat: 'sk-...'
-  },
-  { 
-    id: 'anthropic', 
-    name: 'Anthropic', 
-    icon: '🧠',
-    description: 'Claude 3, Claude 2',
-    keyFormat: 'sk-ant-...'
-  },
-  { 
-    id: 'google', 
-    name: 'Google AI', 
-    icon: '🔍',
-    description: 'Gemini, PaLM',
-    keyFormat: 'AIza...'
-  },
-  { 
-    id: 'cohere', 
-    name: 'Cohere', 
-    icon: '⚡',
-    description: 'Command, Embed, Classify',
-    keyFormat: 'co-...'
   }
 ];
 
 export function AddApiKeyModal({ isOpen, onClose, onSubmit, isLoading }: AddApiKeyModalProps) {
   const [formData, setFormData] = useState<ApiKeyFormData>({
-    provider: '',
+    provider: 'openai',
     apiKey: '',
-    name: '',
+    name: 'OpenAI Key',
     description: ''
   });
   const [showApiKey, setShowApiKey] = useState(false);
@@ -129,7 +108,7 @@ export function AddApiKeyModal({ isOpen, onClose, onSubmit, isLoading }: AddApiK
             Add New API Key
           </DialogTitle>
           <DialogDescription className="text-gray-300">
-            Add a new AI provider API key to start monitoring usage and costs
+            Add your OpenAI API key to start monitoring ChatGPT usage and costs
           </DialogDescription>
         </DialogHeader>
 
@@ -139,7 +118,7 @@ export function AddApiKeyModal({ isOpen, onClose, onSubmit, isLoading }: AddApiK
             <Label htmlFor="provider" className="text-gray-300">Provider *</Label>
             <Select value={formData.provider} onValueChange={handleProviderChange}>
               <SelectTrigger className="bg-gray-900 border-gray-700 text-white">
-                <SelectValue placeholder="Select AI provider" />
+                <SelectValue placeholder="OpenAI" />
               </SelectTrigger>
               <SelectContent className="bg-gray-900 border-gray-700">
                 {PROVIDERS.map((provider) => (
